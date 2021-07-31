@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #0b0c10;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        #div {
+            width: 100vw;
+            height: 20vh;
+            background-color: #1f2833;
+            color: #c5c6c7;
+            font-size: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .file {
+            width: 99.8vw;
+            height: 10vh;
+            border: 1px solid #66fcf1;
+            color: #c5c6c7;
+            fill: #c5c6c7;
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+        }
+
+        .file svg,
+        p {
+            margin: 35px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="div">
+        drag files here
+    </div>
+    <script>
+        let sendFiles = false;
+        let fd = null;
+        const div = document.getElementById("div")
+        document.querySelector("html").ondragover = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        document.querySelector("html").ondrop = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        div.ondragenter = function (e) {
+            div.innerText = "drop"
+            e.stopPropagation();
+            e.preventDefault();
+        }
+
+        div.ondragover = function (e) {
+            div.innerText = "drop"
+            e.stopPropagation();
+            e.preventDefault();
+        }
+
+        div.ondragleave = function (e) {
+            div.innerText = "drag files here"
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        div.ondrop = function (e) {
+            sendFiles = true;
+            div.innerText = "upload"
+            div.style.cursor = "pointer"
+            e.stopPropagation();
+            e.preventDefault();
+
+            fd = new FormData();
+            const files = e.dataTransfer.files;
+            const size = Object.keys(files).length;
+
+            for (let i = 0; i < size; i++) {
+                fd.append('file', files[i]);
+                console.log(files[i])
+                const fileDiv = document.createElement("div");
+                fileDiv.classList.add("file");
+                fileDiv.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24"><path d="M11.362 2c4.156 0 2.638 6 2.638 6s6-1.65 6 2.457v11.543h-16v-20h7.362zm.827-2h-10.189v24h20v-14.386c0-2.391-6.648-9.614-9.811-9.614zm3.81 11l-5.999 1.195v4.344c-1.128-.225-2.275.779-1.941 1.723.44 1.248 2.939.871 2.94-.811v-3.469l4.001-.955v2.912c-1.129-.223-2.259.779-1.926 1.725.44 1.246 2.922.871 2.925-.812v-5.852z"/></svg>
+                <p>${files[i].name}</p>
+                `
+                document.body.append(fileDiv);
+            }
+        }
+        div.addEventListener("click", function () {
+            if (sendFiles == true) {
+                sendFiles = false;
+                div.innerText = "drag files here";
+                div.style.cursor = "default";
+                const divs = document.querySelectorAll(".file")
+                for (let i = 0; i < divs.length; i++) {
+                    divs[i].remove();
+                }
+                $.ajax({
+                    url: '/add-files',
+                    type: 'POST',
+                    data: fd,
+                    contentType: false,
+                    processData: false,
+                    success: function () {
+                        console.log("data sent")
+                    },
+                })
+            }
+        })
+
+    </script>
+</body>
+
+</html>
